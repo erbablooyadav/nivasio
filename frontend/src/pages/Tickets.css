@@ -1,0 +1,120 @@
+.filters-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filters-bar .input-field {
+    min-width: 160px;
+}
+
+/* Kanban Board */
+.kanban-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    min-height: 400px;
+}
+
+@media (max-width: 1100px) {
+    .kanban-board {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .kanban-board {
+        grid-template-columns: 1fr;
+    }
+}
+
+.kanban-column {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.kanban-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.kanban-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--glass-bg);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.kanban-cards {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 200px;
+}
+
+/* Ticket Card */
+.ticket-card {
+    background: var(--gradient-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius-sm);
+    padding: 14px;
+    transition: all var(--transition-normal);
+    cursor: default;
+}
+
+.ticket-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(108, 99, 255, 0.3);
+}
+
+.ticket-card.breach {
+    border-color: rgba(255, 107, 107, 0.4);
+    background: linear-gradient(145deg, rgba(255, 107, 107, 0.05), var(--bg-card));
+}
+
+.ticket-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.ticket-id {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-primary);
+}
+
+.ticket-dept {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.ticket-room {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.ticket-assigned {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+.ticket-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+}

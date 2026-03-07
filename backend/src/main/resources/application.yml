@@ -1,0 +1,45 @@
+server:
+  port: 8080
+
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/pgmanager}
+      database: pgmanager
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:pg-manager-pro-secret-key-change-in-production-2025-very-long-key-for-security}
+    access-token-expiration-ms: 86400000   # 24 hours
+    refresh-token-expiration-ms: 604800000 # 7 days
+
+  whatsapp:
+    verify-token: ${WA_VERIFY_TOKEN:pg-manager-verify-token}
+    api-url: https://graph.facebook.com/v18.0
+    access-token: ${WA_ACCESS_TOKEN:mock-token}
+    phone-number-id: ${WA_PHONE_NUMBER_ID:mock-phone-id}
+    mock-mode: true
+
+  sla:
+    default-threshold-minutes: 120  # 2 hours
+
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+logging:
+  level:
+    com.pgmanager: DEBUG
+    org.springframework.security: INFO

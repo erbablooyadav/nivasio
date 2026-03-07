@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongo:
+    image: mongo:7
+    container_name: pgmanager-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - pgmanager-net
+
+  # Spring Boot Backend
+  backend:
+    build: ./backend
+    container_name: pgmanager-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/pgmanager
+      - JWT_SECRET=${JWT_SECRET:-pg-manager-pro-secret-key-change-in-production-2025-very-long-key}
+      - WA_VERIFY_TOKEN=${WA_VERIFY_TOKEN:-pg-manager-verify-token}
+      - WA_ACCESS_TOKEN=${WA_ACCESS_TOKEN:-mock-token}
+      - WA_PHONE_NUMBER_ID=${WA_PHONE_NUMBER_ID:-mock-phone-id}
+      - CORS_ORIGINS=http://localhost,http://localhost:3000,http://localhost:5173
+    depends_on:
+      - mongo
+    networks:
+      - pgmanager-net
+
+  # React Frontend (Nginx)
+  frontend:
+    build: ./frontend
+    container_name: pgmanager-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - pgmanager-net
+
+volumes:
+  mongo-data:
+
+networks:
+  pgmanager-net:
+    driver: bridge
