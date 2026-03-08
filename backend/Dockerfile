@@ -1,11 +1,14 @@
-FROM eclipse-temurin:17-jdk-alpine AS build
+FROM gradle:8.7-jdk17-alpine AS build
 WORKDIR /app
-COPY . .
-RUN chmod +x ./gradlew 2>/dev/null || true
-RUN ./gradlew bootJar --no-daemon || gradle bootJar --no-daemon
+COPY build.gradle settings.gradle ./
+COPY gradle/ gradle/
+# Download dependencies first (cached layer)
+RUN gradle dependencies --no-daemon || true
+COPY src/ src/
+RUN gradle bootJar --no-daemon
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /app/build/libs/pg-manager-pro.jar app.jar
+COPY --from=build /app/build/libs/nivasio-api.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,52 +1,66 @@
 version: '3.8'
 
 services:
-  # MongoDB Database
+  # MongoDB
   mongo:
     image: mongo:7
-    container_name: pgmanager-mongo
+    container_name: nivasio-mongo
     restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
     networks:
-      - pgmanager-net
+      - nivasio-net
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: nivasio-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - nivasio-net
 
   # Spring Boot Backend
   backend:
     build: ./backend
-    container_name: pgmanager-backend
+    container_name: nivasio-backend
     restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
-      - MONGODB_URI=mongodb://mongo:27017/pgmanager
-      - JWT_SECRET=${JWT_SECRET:-pg-manager-pro-secret-key-change-in-production-2025-very-long-key}
-      - WA_VERIFY_TOKEN=${WA_VERIFY_TOKEN:-pg-manager-verify-token}
-      - WA_ACCESS_TOKEN=${WA_ACCESS_TOKEN:-mock-token}
-      - WA_PHONE_NUMBER_ID=${WA_PHONE_NUMBER_ID:-mock-phone-id}
+      - MONGODB_URI=mongodb://mongo:27017/nivasio
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=${JWT_SECRET:-nivasio-jwt-secret-change-in-production-must-be-at-least-64-bytes-long-for-hs512}
+      - WA_MOCK_MODE=true
       - CORS_ORIGINS=http://localhost,http://localhost:3000,http://localhost:5173
     depends_on:
       - mongo
+      - redis
     networks:
-      - pgmanager-net
+      - nivasio-net
 
   # React Frontend (Nginx)
   frontend:
     build: ./frontend
-    container_name: pgmanager-frontend
+    container_name: nivasio-frontend
     restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
       - backend
     networks:
-      - pgmanager-net
+      - nivasio-net
 
 volumes:
   mongo-data:
+  redis-data:
 
 networks:
-  pgmanager-net:
+  nivasio-net:
     driver: bridge

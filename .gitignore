@@ -6,6 +6,7 @@
 build/
 .gradle/
 !gradle/wrapper/
+bin/
 
 # Node
 node_modules/

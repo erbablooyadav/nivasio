@@ -1,40 +1,53 @@
-# PG Manager Pro 🏠
+# Nivasio 🏠
 
-**WhatsApp-Powered Facility & Service Management SaaS**
+**Smart Residence Management — WhatsApp-First, Multi-Tenant SaaS**
 
-A multi-tenant SaaS platform that allows PG owners, hostels, and residential facilities to automate daily service requests via WhatsApp.
+Manage PGs, hostels, apartments, societies, and co-living spaces from a single platform. Automate service requests via WhatsApp, track everything with a live dashboard.
 
 ---
 
 ## 🚀 Features
 
-- **WhatsApp Bot** — Tenants raise tickets via WhatsApp interactive buttons
-- **Ticket Management** — Auto-generated IDs (HK-0803-0001), SLA tracking, priority tagging
-- **Live Dashboard** — Kanban board with real-time WebSocket updates
-- **Staff Management** — Department-based assignment, workload tracking
-- **Thermal Printing** — ESC/POS integration for ticket receipts
-- **Food Feedback** — Separate module for meal complaints and requests
-- **Multi-Tenant** — Shared DB with tenantId isolation, zero data leakage
-- **JWT Auth** — Role-based access (Super Admin, Tenant Admin, Staff, Tenant)
-- **QR Codes** — Per-room QR codes for quick ticket raising
-- **Billing** — Razorpay subscription management
-- **PWA** — Works like native app on mobile, offline support
+- **WhatsApp Bot** — Residents raise tickets by sending a message
+- **Kanban Dashboard** — Full ticket lifecycle (Open → Assigned → In Progress → Done)
+- **SLA Engine** — Auto-escalates breached tickets every 5 minutes
+- **Multi-Tenant** — AOP-enforced tenant isolation, NEVER accept tenantId from request body
+- **OTP-Only Auth** — No passwords. Phone → OTP → JWT (HS512)
+- **Refresh Token Rotation** — HttpOnly cookies, blacklist on rotation
+- **Role-Based Access** — SUPER_ADMIN, PROPERTY_ADMIN, STAFF, RESIDENT
+- **Redis-Powered** — OTP storage, message dedup, token blacklist, rate limiting
+- **HMAC Webhooks** — SHA-256 signature verification on all incoming webhooks
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠 Tech Stack
 
+### Backend
 | Layer | Technology |
 |-------|-----------|
-| Backend | Java 17 + Spring Boot 3.x |
-| Database | MongoDB |
-| Frontend | React + Vite (PWA) |
-| WhatsApp | Meta Cloud API (mocked for dev) |
-| Auth | Spring Security + JWT |
-| Realtime | WebSocket (STOMP) |
-| QR Code | ZXing |
-| Billing | Razorpay |
-| Deployment | Docker + docker-compose |
+| Runtime | Java 17, Spring Boot 3.2 |
+| Database | MongoDB 7 |
+| Cache | Redis 7 |
+| Auth | JWT HS512 (15min access + 7d refresh) |
+| Security | AOP tenant isolation, HMAC webhooks |
+| Build | Gradle |
+
+### Frontend
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 19 + TypeScript |
+| Styling | Tailwind CSS v4 |
+| State | Zustand (persisted) |
+| API | Axios (auto-refresh) |
+| Charts | Recharts |
+| Icons | Lucide React |
+
+### DevOps
+| Layer | Technology |
+|-------|-----------|
+| Containers | Docker multi-stage |
+| Orchestration | Docker Compose |
+| Web Server | Nginx (SPA + API proxy) |
 
 ---
 
@@ -42,138 +55,89 @@ A multi-tenant SaaS platform that allows PG owners, hostels, and residential fac
 
 ```
 pg-manager-pro/
-├── backend/                    # Spring Boot API
-│   ├── src/main/java/com/pgmanager/
-│   │   ├── config/             # Security, WebSocket, CORS
-│   │   ├── controller/         # REST APIs (8 controllers)
-│   │   ├── service/            # Business logic (7 services)
-│   │   ├── repository/         # MongoDB repositories
-│   │   ├── model/              # MongoDB documents (8 models)
-│   │   ├── dto/                # Request/Response DTOs
-│   │   ├── security/           # JWT filter, token provider
-│   │   ├── whatsapp/           # Bot engine + WA service
-│   │   ├── scheduler/          # SLA breach checker
-│   │   └── exception/          # Global error handling
-│   ├── build.gradle
-│   └── Dockerfile
-├── frontend/                   # React PWA
+├── backend/
+│   ├── src/main/java/in/nivasio/
+│   │   ├── config/          # Security, WebSocket, Redis, Async
+│   │   ├── controller/      # 8 REST controllers
+│   │   ├── dto/              # 9 DTOs
+│   │   ├── exception/        # 5 exceptions + GlobalExceptionHandler
+│   │   ├── model/            # 10 MongoDB documents
+│   │   ├── repository/       # 10 Spring Data repos
+│   │   ├── scheduler/        # SLA breach checker
+│   │   ├── security/         # JWT, AOP, HMAC
+│   │   ├── service/          # 7 business services
+│   │   └── whatsapp/         # Bot conversation service
+│   └── build.gradle
+├── frontend/
 │   ├── src/
-│   │   ├── pages/              # Dashboard, Tickets, Staff, Rooms...
-│   │   ├── components/         # Sidebar, Layout
-│   │   ├── context/            # AuthContext
-│   │   ├── api/                # API client with JWT handling
-│   │   └── index.css           # Design system
-│   ├── Dockerfile
-│   └── nginx.conf
-├── docker-compose.yml
-├── .env.example
+│   │   ├── api/              # Axios client (auto-refresh)
+│   │   ├── components/       # Sidebar, Layout
+│   │   ├── pages/            # 7 pages (Login, Dashboard, Tickets, etc.)
+│   │   ├── store/            # Zustand auth store
+│   │   ├── types/            # TypeScript interfaces
+│   │   └── App.tsx
+│   └── package.json
+├── docker-compose.yml        # MongoDB + Redis + Backend + Frontend
 └── README.md
 ```
 
 ---
 
-## 🏃 Quick Start
+## 🚀 Quick Start
 
-### Prerequisites
-- Java 17+
-- Node.js 18+
-- MongoDB (local or Atlas)
+### Local Development
 
-### Backend
 ```bash
+# Backend (requires Java 17 + MongoDB + Redis running)
 cd backend
-# Set MongoDB URI in application.yml or environment
 ./gradlew bootRun
-# Server starts at http://localhost:8080
-# Swagger UI: http://localhost:8080/swagger-ui.html
-```
 
-### Frontend
-```bash
+# Frontend
 cd frontend
 npm install
 npm run dev
-# App starts at http://localhost:5173
 ```
 
-### Docker (Full Stack)
+### Docker
+
 ```bash
-cp .env.example .env
-# Edit .env with your WhatsApp API credentials
-docker-compose up -d
-# Frontend: http://localhost
-# Backend: http://localhost:8080
-# MongoDB: localhost:27017
+docker-compose up --build
 ```
+
+Open http://localhost (frontend) or http://localhost:8080/swagger-ui.html (API docs)
 
 ---
 
 ## 🔑 API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/auth/register` | Register new PG (creates tenant + admin) |
-| POST | `/api/v1/auth/login` | Login with email/phone + password |
-| POST | `/api/v1/auth/refresh` | Refresh JWT token |
-| GET | `/api/v1/dashboard/stats` | Dashboard statistics |
-| GET/POST | `/api/v1/tickets` | List/Create tickets |
-| PUT | `/api/v1/tickets/{id}/status` | Update ticket status |
-| PUT | `/api/v1/tickets/{id}/assign` | Assign ticket to staff |
-| GET/POST | `/api/v1/staff` | List/Create staff |
-| GET/POST | `/api/v1/rooms` | List/Create rooms |
-| GET | `/api/v1/food-feedback` | List food feedback |
-| GET/POST | `/api/v1/webhook` | WhatsApp webhook |
-| GET | `/health` | Health check |
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/v1/auth/request-otp` | — | Send OTP to phone |
+| POST | `/api/v1/auth/verify-otp` | — | Verify OTP → JWT |
+| POST | `/api/v1/auth/register` | — | Register new owner |
+| POST | `/api/v1/auth/refresh` | Cookie | Rotate refresh token |
+| GET | `/api/v1/dashboard/stats` | JWT | Dashboard metrics |
+| GET/POST | `/api/v1/tickets` | JWT | List/Create tickets |
+| PUT | `/api/v1/tickets/{id}/status` | JWT | Update ticket status |
+| PUT | `/api/v1/tickets/{id}/assign` | ADMIN | Assign to staff |
+| GET/POST | `/api/v1/staff` | ADMIN | Staff CRUD |
+| GET/POST | `/api/v1/rooms` | JWT | Room CRUD |
+| GET | `/api/v1/food-feedback` | JWT | List feedback |
+| GET/POST | `/api/v1/webhook` | HMAC | WhatsApp webhook |
 
 ---
 
-## 👥 Roles & Permissions
+## 🔐 Security Architecture
 
-| Feature | Super Admin | Tenant Admin | Staff | Tenant |
-|---------|:-:|:-:|:-:|:-:|
-| View all tenants | ✅ | ❌ | ❌ | ❌ |
-| Manage rooms/staff | ✅ | ✅ | ❌ | ❌ |
-| View all tickets | ✅ | ✅ | Own dept | Own only |
-| Update ticket status | ✅ | ✅ | ✅ | ❌ |
-| View reports | ✅ | ✅ | ❌ | ❌ |
-| Raise ticket | ✅ | ✅ | ✅ | ✅ (via WA) |
+1. **JWT HS512** — 15min access tokens, 7-day refresh in HttpOnly cookie
+2. **AOP Tenant Isolation** — Every service method validates tenantId matches JWT
+3. **HMAC-SHA256** — All webhooks verified before processing
+4. **OTP Brute Force** — Max 3 attempts per phone per 30 minutes (Redis)
+5. **Token Rotation** — Old refresh tokens blacklisted on use
+6. **No Stack Traces** — Production errors return generic messages with error codes
 
 ---
 
-## 💰 Pricing Tiers
+## 📜 License
 
-| Tier | Price | Hosting |
-|------|-------|---------|
-| Tier 0 — Serverless | FREE | Firebase |
-| Tier 1 — Self-Host | FREE | Your server |
-| Tier 2 — Basic Cloud | ₹499/mo | Our cloud |
-| Tier 2 — Standard | ₹999/mo | Our cloud |
-| Tier 2 — Pro | ₹1,499/mo | Our cloud |
-| Tier 3 — Enterprise | ₹10,000+/mo | Dedicated |
-
----
-
-## 📋 Environment Variables
-
-```env
-MONGODB_URI=mongodb://localhost:27017/pgmanager
-JWT_SECRET=your-secret-key
-WA_VERIFY_TOKEN=your-webhook-verify-token
-WA_ACCESS_TOKEN=your-meta-access-token
-WA_PHONE_NUMBER_ID=your-phone-number-id
-CORS_ORIGINS=http://localhost:5173
-```
-
----
-
-## 🧪 Development
-
-### WhatsApp Mock Mode
-The app starts with `app.whatsapp.mock-mode=true` by default. WhatsApp messages are logged to console instead of calling Meta API. Set to `false` in production with real Meta API credentials.
-
-### SLA Checker
-Runs every 5 minutes automatically. Configurable via `app.sla.default-threshold-minutes` (default: 120 minutes = 2 hours).
-
----
-
-Built with ❤️ for PG/Hostel owners across India.
+MIT

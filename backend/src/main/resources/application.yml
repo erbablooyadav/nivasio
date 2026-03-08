@@ -2,44 +2,43 @@ server:
   port: 8080
 
 spring:
+  application:
+    name: nivasio-api
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/pgmanager}
-      database: pgmanager
+      uri: ${MONGODB_URI:mongodb://localhost:27017/nivasio}
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
-    default-property-inclusion: non_null
-
+# JWT Configuration
 app:
   jwt:
-    secret: ${JWT_SECRET:pg-manager-pro-secret-key-change-in-production-2025-very-long-key-for-security}
-    access-token-expiration-ms: 86400000   # 24 hours
-    refresh-token-expiration-ms: 604800000 # 7 days
-
-  whatsapp:
-    verify-token: ${WA_VERIFY_TOKEN:pg-manager-verify-token}
-    api-url: https://graph.facebook.com/v18.0
-    access-token: ${WA_ACCESS_TOKEN:mock-token}
-    phone-number-id: ${WA_PHONE_NUMBER_ID:mock-phone-id}
-    mock-mode: true
-
-  sla:
-    default-threshold-minutes: 120  # 2 hours
-
+    secret: ${JWT_SECRET:nivasio-jwt-secret-key-for-development-only-change-in-production-must-be-at-least-64-bytes}
+    access-expiry-ms: 900000      # 15 minutes
+    refresh-expiry-ms: 604800000  # 7 days
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+    origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+  whatsapp:
+    mock-mode: ${WA_MOCK_MODE:true}
+    verify-token: ${WA_VERIFY_TOKEN:nivasio-verify}
+    app-secret: ${WA_APP_SECRET:}
+    access-token: ${WA_ACCESS_TOKEN:}
+    phone-number-id: ${WA_PHONE_NUMBER_ID:}
+  sla:
+    check-interval-ms: ${SLA_CHECK_INTERVAL:300000}  # 5 minutes
+    default-threshold-minutes: ${SLA_DEFAULT_THRESHOLD:120}  # 2 hours
 
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# Swagger
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: alpha
-
-logging:
-  level:
-    com.pgmanager: DEBUG
-    org.springframework.security: INFO
