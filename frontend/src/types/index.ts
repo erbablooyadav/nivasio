@@ -7,6 +7,7 @@ export interface Ticket {
     status: 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'DONE' | 'CLOSED' | 'REOPENED';
     priority: 'NORMAL' | 'URGENT';
     roomNo: string;
+    propertyId?: string;
     residentName?: string;
     assignedTo?: string;
     assignedToName?: string;
@@ -14,6 +15,7 @@ export interface Ticket {
     photos?: string[];
     slaDeadline?: string;
     slaBreach: boolean;
+    recurringFlag?: boolean;
     createdAt: string;
     completedAt?: string;
 }
@@ -54,6 +56,7 @@ export interface FoodFeedback {
 export interface DashboardStats {
     totalTickets: number;
     openTickets: number;
+    assignedTickets: number;
     inProgressTickets: number;
     doneTickets: number;
     slaBreachTickets: number;
@@ -61,6 +64,81 @@ export interface DashboardStats {
     totalRooms: number;
     totalStaff: number;
     totalResidents: number;
+    slaBreachRate: number;
+    staffWorkload: Record<string, number>;
+    weeklyTrend: { date: string; count: number }[];
+    departmentBreakdown: Record<string, number>;
+}
+
+export interface Property {
+    id: string;
+    tenantId: string;
+    name: string;
+    address: string;
+    city: string;
+    type: string;
+    totalRooms: number;
+    totalFloors: number;
+    amenities: string[];
+    active: boolean;
+    createdAt: string;
+}
+
+export interface Resident {
+    id: string;
+    tenantId: string;
+    propertyId?: string;
+    roomNo: string;
+    name: string;
+    phone: string;
+    email?: string;
+    emergencyContact?: string;
+    languagePreference?: string;
+    active: boolean;
+    status: string;
+    moveInDate: string;
+    moveOutDate?: string;
+}
+
+export interface Onboarding {
+    id: string;
+    tenantId: string;
+    fullName: string;
+    phone: string;
+    email?: string;
+    roomNo: string;
+    idProofType: string;
+    idProofUrl?: string;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    rejectionReason?: string;
+    submittedAt: string;
+    reviewedAt?: string;
+}
+
+export interface RentRecord {
+    id: string;
+    tenantId: string;
+    residentId: string;
+    residentName: string;
+    roomNo: string;
+    amount: number;
+    month: string;
+    dueDate: string;
+    paidDate?: string;
+    status: 'PENDING' | 'PAID' | 'OVERDUE' | 'PARTIAL';
+    paymentMode?: string;
+    transactionId?: string;
+    reminderSent: boolean;
+}
+
+export interface Notification {
+    id: string;
+    type: string;
+    title: string;
+    message: string;
+    referenceId?: string;
+    read: boolean;
+    createdAt: string;
 }
 
 export interface AuthResponse {

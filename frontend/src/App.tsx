@@ -9,6 +9,11 @@ import Staff from './pages/Staff';
 import Rooms from './pages/Rooms';
 import Food from './pages/Food';
 import Settings from './pages/Settings';
+import Residents from './pages/Residents';
+import OnboardingPage from './pages/Onboarding';
+import Rent from './pages/Rent';
+import Properties from './pages/Properties';
+import AuditLog from './pages/AuditLog';
 import './index.css';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -24,9 +29,14 @@ function AppRoutes() {
             <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/tickets" element={<Tickets />} />
-                <Route path="/staff" element={<Staff />} />
+                <Route path="/properties" element={<Properties />} />
+                <Route path="/residents" element={<Residents />} />
                 <Route path="/rooms" element={<Rooms />} />
+                <Route path="/staff" element={<Staff />} />
+                <Route path="/onboarding" element={<OnboardingPage />} />
+                <Route path="/rent" element={<Rent />} />
                 <Route path="/food" element={<Food />} />
+                <Route path="/audit" element={<AuditLog />} />
                 <Route path="/settings" element={<Settings />} />
             </Route>
             <Route path="*" element={<Navigate to="/" />} />
