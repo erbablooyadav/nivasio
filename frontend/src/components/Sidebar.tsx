@@ -2,15 +2,21 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
 import {
     LayoutDashboard, Ticket, Users, DoorOpen, UtensilsCrossed,
-    Settings, LogOut, Building2
+    Settings, LogOut, Building2, UserPlus, IndianRupee, ClipboardList,
+    Home, Shield
 } from 'lucide-react';
 
 const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ['PROPERTY_ADMIN', 'SUPER_ADMIN'] },
     { path: '/tickets', icon: Ticket, label: 'Tickets', roles: ['PROPERTY_ADMIN', 'SUPER_ADMIN', 'STAFF'] },
-    { path: '/staff', icon: Users, label: 'Staff', roles: ['PROPERTY_ADMIN', 'SUPER_ADMIN'] },
+    { path: '/properties', icon: Home, label: 'Properties', roles: ['PROPERTY_ADMIN', 'SUPER_ADMIN'] },
+    { path: '/residents', icon: Users, label: 'Residents', roles: ['PROPERTY_ADMIN', 'SUPER_ADMIN'] },
     { path: '/rooms', icon: DoorOpen, label: 'Rooms', roles: ['PROPERTY_ADMIN', 'SUPER_ADMIN'] },
-    { path: '/food', icon: UtensilsCrossed, label: 'Food Feedback', roles: ['PROPERTY_ADMIN', 'SUPER_ADMIN'] },
+    { path: '/staff', icon: ClipboardList, label: 'Staff', roles: ['PROPERTY_ADMIN', 'SUPER_ADMIN'] },
+    { path: '/onboarding', icon: UserPlus, label: 'Onboarding', roles: ['PROPERTY_ADMIN', 'SUPER_ADMIN'] },
+    { path: '/rent', icon: IndianRupee, label: 'Rent', roles: ['PROPERTY_ADMIN', 'SUPER_ADMIN'] },
+    { path: '/food', icon: UtensilsCrossed, label: 'Food', roles: ['PROPERTY_ADMIN', 'SUPER_ADMIN'] },
+    { path: '/audit', icon: Shield, label: 'Audit Log', roles: ['SUPER_ADMIN'] },
     { path: '/settings', icon: Settings, label: 'Settings', roles: ['PROPERTY_ADMIN', 'SUPER_ADMIN'] },
 ];
 

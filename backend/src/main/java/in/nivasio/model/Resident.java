@@ -31,7 +31,8 @@ public class Resident {
     private String idProofUrl;
     private String idProofType; // AADHAAR, PAN, PASSPORT
     private String emergencyContact;
-    private String language; // en, hi
+    private String languagePreference; // en, hi
+    private boolean active;
     private String status; // ACTIVE, MOVED_OUT, SUSPENDED
     private Instant moveInDate;
     private Instant moveOutDate;

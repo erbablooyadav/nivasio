@@ -21,8 +21,10 @@ public class Property {
     private String propertyId;
     private String name;
     private String address;
+    private String city;
     private String type; // PG, HOSTEL, APARTMENT, SOCIETY, CO_LIVING
     private int totalRooms;
+    private int totalFloors;
     private List<String> amenities;
     private boolean active;
     private Instant createdAt;

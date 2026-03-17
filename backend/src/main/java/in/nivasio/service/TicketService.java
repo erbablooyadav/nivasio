@@ -8,6 +8,7 @@ import in.nivasio.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -25,9 +26,11 @@ public class TicketService {
 
     private final TicketRepository ticketRepo;
     private final StaffRepository staffRepo;
-    private final AuditLogRepository auditRepo;
     private final SimpMessagingTemplate ws;
     private final AuditService auditService;
+    private final RedisTemplate<String, String> redis;
+
+    private static final String ROUND_ROBIN_PREFIX = "rr:";
 
     private static final Map<String, String> TYPE_TO_DEPT = Map.of(
             "HOUSEKEEPING", "HOUSEKEEPING",
@@ -53,6 +56,7 @@ public class TicketService {
 
         Ticket ticket = Ticket.builder()
                 .tenantId(tenantId)
+                .propertyId(request.getPropertyId())
                 .ticketId(ticketId)
                 .type(request.getType())
                 .department(dept)
@@ -60,6 +64,7 @@ public class TicketService {
                 .priority(request.getPriority() != null ? request.getPriority() : "NORMAL")
                 .roomNo(request.getRoomNo())
                 .description(request.getDescription())
+                .photos(request.getPhotos())
                 .slaDeadline(Instant.now().plusSeconds(7200))
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
@@ -67,24 +72,27 @@ public class TicketService {
 
         ticket = ticketRepo.save(ticket);
 
-        // Auto-assign to available staff
-        autoAssign(ticket);
+        // Round-robin auto-assign
+        autoAssignRoundRobin(ticket);
 
-        // Check recurring
-        checkRecurring(tenantId, request.getRoomNo(), request.getType());
+        // Flag if recurring
+        boolean isRecurring = checkRecurring(tenantId, request.getRoomNo(), request.getType());
+        if (isRecurring) {
+            ticket.setRecurringFlag(true);
+            ticket.setPriority("URGENT");
+            ticketRepo.save(ticket);
+        }
 
-        // Audit
         auditService.log(tenantId, "TICKET", ticketId, "CREATED", creatorId, null);
-
-        // WebSocket broadcast
         ws.convertAndSend("/topic/tickets/" + tenantId, ticket);
-
         return ticket;
     }
 
     public Ticket updateStatus(String tenantId, String ticketId, String newStatus, String userId) {
         Ticket ticket = ticketRepo.findByTicketIdAndTenantId(ticketId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
+
+        validateStatusTransition(ticket.getStatus(), newStatus);
 
         String oldStatus = ticket.getStatus();
         ticket.setStatus(newStatus);
@@ -100,10 +108,7 @@ public class TicketService {
             ticket.setClosedAt(Instant.now());
 
         ticket = ticketRepo.save(ticket);
-
-        auditService.log(tenantId, "TICKET", ticketId, "STATUS_CHANGED", userId,
-                oldStatus + " → " + newStatus);
-
+        auditService.log(tenantId, "TICKET", ticketId, "STATUS_CHANGED", userId, oldStatus + " → " + newStatus);
         ws.convertAndSend("/topic/tickets/" + tenantId, ticket);
         return ticket;
     }
@@ -111,7 +116,6 @@ public class TicketService {
     public Ticket assignTicket(String tenantId, String ticketId, String staffId, String userId) {
         Ticket ticket = ticketRepo.findByTicketIdAndTenantId(ticketId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
-
         Staff staff = staffRepo.findByIdAndTenantId(staffId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Staff not found: " + staffId));
 
@@ -120,7 +124,6 @@ public class TicketService {
         ticket.setStatus("ASSIGNED");
         ticket.setAssignedAt(Instant.now());
         ticket.setUpdatedAt(Instant.now());
-
         ticket = ticketRepo.save(ticket);
 
         auditService.log(tenantId, "TICKET", ticketId, "ASSIGNED", userId, "to " + staff.getName());
@@ -131,13 +134,12 @@ public class TicketService {
     public Page<Ticket> getTickets(String tenantId, String status, String department,
             String roomNo, String assignedTo, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        if (status != null && department != null) {
+        if (status != null && department != null)
             return ticketRepo.findByTenantIdAndStatusAndDepartment(tenantId, status, department, pageable);
-        } else if (status != null) {
+        if (status != null)
             return ticketRepo.findByTenantIdAndStatus(tenantId, status, pageable);
-        } else if (department != null) {
+        if (department != null)
             return ticketRepo.findByTenantIdAndDepartment(tenantId, department, pageable);
-        }
         return ticketRepo.findByTenantId(tenantId, pageable);
     }
 
@@ -158,25 +160,49 @@ public class TicketService {
         }
     }
 
-    private void autoAssign(Ticket ticket) {
+    /** Round-robin auto-assign via Redis counter for fair distribution. */
+    private void autoAssignRoundRobin(Ticket ticket) {
         List<Staff> available = staffRepo.findByTenantIdAndDepartmentAndActiveTrue(
                 ticket.getTenantId(), ticket.getDepartment());
-        if (!available.isEmpty()) {
-            Staff staff = available.get(0);
-            ticket.setAssignedTo(staff.getId());
-            ticket.setAssignedToName(staff.getName());
-            ticket.setStatus("ASSIGNED");
-            ticket.setAssignedAt(Instant.now());
-            ticketRepo.save(ticket);
-        }
+        if (available.isEmpty())
+            return;
+
+        String rrKey = ROUND_ROBIN_PREFIX + ticket.getTenantId() + ":" + ticket.getDepartment();
+        Long idx = redis.opsForValue().increment(rrKey);
+        if (idx == null)
+            idx = 0L;
+        Staff staff = available.get((int) (idx % available.size()));
+
+        ticket.setAssignedTo(staff.getId());
+        ticket.setAssignedToName(staff.getName());
+        ticket.setStatus("ASSIGNED");
+        ticket.setAssignedAt(Instant.now());
+        ticketRepo.save(ticket);
+        log.info("Auto-assigned ticket {} to {} (round-robin)", ticket.getTicketId(), staff.getName());
     }
 
-    private void checkRecurring(String tenantId, String roomNo, String type) {
-        Instant thirtyDaysAgo = Instant.now().minusSeconds(30 * 24 * 3600);
+    private boolean checkRecurring(String tenantId, String roomNo, String type) {
+        Instant sevenDaysAgo = Instant.now().minusSeconds(7 * 24 * 3600);
         List<Ticket> recent = ticketRepo.findByTenantIdAndRoomNoAndTypeAndCreatedAtAfter(
-                tenantId, roomNo, type, thirtyDaysAgo);
+                tenantId, roomNo, type, sevenDaysAgo);
         if (recent.size() >= 3) {
-            log.warn("RECURRING ISSUE: room {} type {} has {} tickets in 30 days", roomNo, type, recent.size());
+            log.warn("RECURRING: room {} type {} → {} tickets in 7 days", roomNo, type, recent.size());
+            return true;
+        }
+        return false;
+    }
+
+    /** Security: enforce valid status transitions. */
+    private void validateStatusTransition(String from, String to) {
+        Map<String, List<String>> allowed = Map.of(
+                "OPEN", List.of("ASSIGNED", "IN_PROGRESS", "CLOSED"),
+                "ASSIGNED", List.of("IN_PROGRESS", "CLOSED"),
+                "IN_PROGRESS", List.of("DONE", "CLOSED"),
+                "DONE", List.of("CLOSED", "REOPENED"),
+                "REOPENED", List.of("ASSIGNED", "IN_PROGRESS", "CLOSED"),
+                "CLOSED", List.of());
+        if (!allowed.getOrDefault(from, List.of()).contains(to)) {
+            throw new BadRequestException("Invalid transition: " + from + " → " + to);
         }
     }
 }
