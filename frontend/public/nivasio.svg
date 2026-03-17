@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="roof" x1="12" y1="10" x2="52" y2="10" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#e0e7ff" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded background -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- Building body -->
+  <rect x="18" y="24" width="28" height="28" rx="3" fill="white" fill-opacity="0.92"/>
+  <!-- Roof / triangle -->
+  <polygon points="32,10 12,26 52,26" fill="url(#roof)"/>
+  <!-- Door -->
+  <rect x="28" y="38" width="8" height="14" rx="2" fill="#6366f1" fill-opacity="0.7"/>
+  <!-- Door knob -->
+  <circle cx="34" cy="46" r="1.2" fill="white" fill-opacity="0.9"/>
+  <!-- Left window -->
+  <rect x="21" y="28" width="6" height="6" rx="1.2" fill="#06b6d4" fill-opacity="0.55"/>
+  <!-- Right window -->
+  <rect x="37" y="28" width="6" height="6" rx="1.2" fill="#06b6d4" fill-opacity="0.55"/>
+  <!-- Chimney -->
+  <rect x="40" y="12" width="5" height="12" rx="1.5" fill="white" fill-opacity="0.75"/>
+  <!-- Subtle "N" letterform in chimney smoke -->
+  <path d="M41 8 L41 4 L44 8 L44 4" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/>
+</svg>

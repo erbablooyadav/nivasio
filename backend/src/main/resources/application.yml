@@ -6,10 +6,9 @@ spring:
     name: nivasio-api
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/nivasio}
+      uri: ${MONGODB_URI:mongodb+srv://nivasio:pDe5HuxfYjMtildp@nivasio.wnccwbz.mongodb.net/nivasio?appName=Nivasio}
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      url: ${REDIS_URL:rediss://default:gQAAAAAAASQ2AAIncDE2NmRkYjUzYWQ0NDg0ZmJjOTlmN2ZlNjIwNTZhNjEwZnAxNzQ4MDY@pleased-sailfish-74806.upstash.io:6379}
 
 # JWT Configuration
 app:
@@ -31,10 +30,9 @@ app:
 
 # Actuator
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
+  endpoint:
+    health:
+      show-details: always
 
 # Swagger
 springdoc:
