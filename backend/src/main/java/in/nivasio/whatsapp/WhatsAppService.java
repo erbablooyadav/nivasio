@@ -42,7 +42,7 @@ public class WhatsAppService {
                     "to": "%s",
                     "type": "template",
                     "template": {
-                        "name": "nivasio_otp",
+                        "name": "hello_world",
                         "language": { "code": "en_US" },
                         "components": [{
                             "type": "body",
