@@ -6,9 +6,9 @@ spring:
     name: nivasio-api
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb+srv://nivasio:pDe5HuxfYjMtildp@nivasio.wnccwbz.mongodb.net/nivasio?appName=Nivasio}
+      uri: ${MONGODB_URI:}
     redis:
-      url: ${REDIS_URL:rediss://default:gQAAAAAAASQ2AAIncDE2NmRkYjUzYWQ0NDg0ZmJjOTlmN2ZlNjIwNTZhNjEwZnAxNzQ4MDY@pleased-sailfish-74806.upstash.io:6379}
+      url: ${REDIS_URL:}
 
 # JWT Configuration
 app:
@@ -17,9 +17,9 @@ app:
     access-expiry-ms: 900000      # 15 minutes
     refresh-expiry-ms: 604800000  # 7 days
   cors:
-    origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+    origins: ${CORS_ORIGINS:https://nivasio.pages.dev}
   whatsapp:
-    mock-mode: ${WA_MOCK_MODE:true}
+    mock-mode: ${WA_MOCK_MODE:false}
     verify-token: ${WA_VERIFY_TOKEN:nivasio-verify}
     app-secret: ${WA_APP_SECRET:}
     access-token: ${WA_ACCESS_TOKEN:}

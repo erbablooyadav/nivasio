@@ -7,8 +7,12 @@ import in.nivasio.model.*;
 import in.nivasio.repository.*;
 import in.nivasio.security.JwtTokenProvider;
 import in.nivasio.exception.*;
+import in.nivasio.whatsapp.WhatsAppService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +28,8 @@ import java.util.concurrent.ThreadLocalRandom;
 @Slf4j
 public class AuthService {
 
+    @Value("${app.whatsapp.mock-mode:true}")
+    private boolean mockMode;
     private final TenantRepository tenantRepo;
     private final StaffRepository staffRepo;
     private final ResidentRepository residentRepo;
@@ -31,6 +37,7 @@ public class AuthService {
     private final PropertyRepository propertyRepo;
     private final JwtTokenProvider tokenProvider;
     private final RedisTemplate<String, String> redis;
+    private final WhatsAppService whatsAppService;
 
     private static final String OTP_PREFIX = "otp:";
     private static final String OTP_ATTEMPT_PREFIX = "otp_attempt:";
@@ -56,9 +63,12 @@ public class AuthService {
         redis.opsForValue().increment(attemptKey);
         redis.expire(attemptKey, Duration.ofMinutes(30));
 
-        // In production: send via Twilio/MSG91
-        // For now: log to console (NEVER log in production!)
-        log.info("[DEV OTP] Phone: {}, OTP: {}", maskPhone(phone), otp);
+        if (mockMode) {
+            log.info("[DEV OTP] Phone: {}, OTP: {}", maskPhone(phone), otp);
+        } else {
+            whatsAppService.sendOtp(phone, otp).block();
+            log.info("[WA OTP] Phone: {}, OTP: {}", maskPhone(phone), otp);
+        }
     }
 
     /**
